@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중2 과학 - 파동아 놀자</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-dark: #357abd;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: #eef2f7;
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 950px;
+            width: 100%;
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            color: var(--primary-dark);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        .tab-container {
+            display: flex;
+            border-bottom: 3px solid #ddd;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            background: #e0e0e0;
+            border: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #555;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 3px solid #ddd;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 300px;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            background: var(--light);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .control-label .value {
+            color: var(--primary);
+            font-family: monospace;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        .desc-text {
+            font-size: 0.85rem;
+            color: #2c3e50;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .info-panel {
+            background: #eef2f7;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-box {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+        .info-box strong {
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+        }
+
+        .static-canvas-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 3px dashed #7f8c8d;
+        }
+
+        .kalimba-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fdfaf4;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px dashed #d1c4e9;
+        }
+
+        .kalimba-body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: #8d6e63;
+            padding: 20px 30px 10px 30px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.15);
+            gap: 6px;
+            margin-top: 15px;
+            width: 85%;
+        }
+
+        .kalimba-key {
+            background: linear-gradient(to bottom, #e0e0e0, #9e9e9e);
+            border: 1px solid #757575;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 12px;
+            color: #212121;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.1s;
+            box-shadow: 0 4px 4px rgba(0,0,0,0.3);
+        }
+
+        .kalimba-key:active {
+            background: linear-gradient(to bottom, #b2dfdb, #008080);
+            transform: translateY(2px);
+            color: white;
+        }
+
+        .play-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .play-btn.playing {
+            background: var(--danger);
+        }
+
+        /* 퀴즈 스타일 */
+        .quiz-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+        .quiz-question {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            min-height: 45px;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .quiz-option {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .quiz-option:hover {
+            border-color: var(--primary);
+            background: #f0f6ff;
+        }
+        .quiz-option.correct {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        .quiz-option.incorrect {
+            background: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        .quiz-feedback {
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+            line-height: 1.4;
+        }
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        .quiz-btn {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .quiz-btn:hover {
+            background: #1a252f;
+        }
+        .quiz-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .quiz-result-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            text-align: center;
+            background: #fff;
+            border-radius: 12px;
+            border: 2px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎵 파동아 놀자 🎶</h1>
+    <div class="subtitle">중학교 2학년 과학 - 탭을 이동하며 파동의 성질을 마스터해 보세요!</div>
+
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab(1)">🔎 1. 파동 개념 익히기</button>
+        <button class="tab-btn" onclick="switchTab(2)">🌊 2. 음파 가상실험</button>
+        <button class="tab-btn" onclick="switchTab(3)">🎹 3. 악기의 음색 알아보기</button>
+        <button class="tab-btn" onclick="switchTab(4)">📝 4. 퀴즈</button>
+    </div>
+
+    <div id="tab1" class="tab-content active">
+        <div class="static-canvas-container">
+            <canvas id="staticWaveCanvas" style="height: 160px;"></canvas>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-box"><strong>⛰️ 마루:</strong> <span class="desc-text">파동에서 가장 높은 곳</span></div>
+            <div class="info-box"><strong>🕳️ 골:</strong> <span class="desc-text">파동에서 가장 낮은 곳</span></div>
+            <div class="info-box" style="grid-column: span 2;"><strong>↕️ 진폭:</strong> <span class="desc-text">진동 중심에서 마루나 골까지의 거리</span></div>
+            <div class="info-box" style="grid-column: span 2;"><strong>↔️ 파장:</strong> <span class="desc-text">마루와 이웃한 마루, 또는 골과 이웃한 골까지의 거리</span></div>
+            <div class="info-box" style="grid-column: span 2;"><strong>🔄 진동수:</strong> <span class="desc-text">파동이 1초 동안 진동하는 횟수(단위: Hz(헤르츠))</span></div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvasTab1"></canvas>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="control-label"><span>↕️ 진폭 (Amplitude)</span><span id="t1AmpVal" class="value">50</span></div>
+                <input type="range" id="t1SliderAmp" min="15" max="110" value="50">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>↔️ 파장 (Wavelength)</span><span id="t1WaveVal" class="value">200</span></div>
+                <input type="range" id="t1SliderWave" min="90" max="380" value="200">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>🔄 진동수 (Frequency)</span><span id="t1FreqVal" class="value">1.0Hz</span></div>
+                <input type="range" id="t1SliderFreq" min="0.3" max="3.0" step="0.1" value="1.0">
+            </div>
+        </div>
+    </div>
+
+    <div id="tab2" class="tab-content">
+        <button id="t2PlayBtn" class="play-btn" onclick="toggleTone()">▶ 소리 재생 (띠----)</button>
+        <div class="canvas-container">
+            <canvas id="canvasTab2"></canvas>
+        </div>
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="control-label"><span>🔊 소리 세기 설정 (진폭 조절)</span><span id="t2AmpVal" class="value">보통</span></div>
+                <input type="range" id="t2SliderAmp" min="10" max="110" value="50" oninput="updateTone()">
+            </div>
+            <div class="control-group">
+                <div class="control-label"><span>🎵 소리 높낮이 설정 (진동수 조절)</span><span id="t2FreqVal" class="value">261Hz</span></div>
+                <input type="range" id="t2SliderFreq" min="150" max="800" value="261" oninput="updateTone()">
+            </div>
+        </div>
+    </div>
+
+    <div id="tab3" class="tab-content">
+        <div class="canvas-container">
+            <canvas id="canvasTab3"></canvas>
+        </div>
+        <div class="kalimba-container">
+            <div class="control-panel" style="width:100%; margin-bottom:10px; padding:0; background:none;">
+                <div class="control-group">
+                    <div class="control-label"><span>🔊 소리 세기 설정 (진폭 조절)</span><span id="t3AmpVal" class="value">보통</span></div>
+                    <input type="range" id="t3SliderAmp" min="0.2" max="1.5" step="0.1" value="0.7">
+                </div>
+                <div class="control-group">
+                    <div class="control-label"><span>🎻 악기 음색 선택 (파형 변경)</span></div>
+                    <select id="t3WaveType" style="padding:5px; border-radius:5px; font-weight:bold;">
+                        <option value="sine">🔮 칼림바 (부드러운 기본 파형 - 사인파)</option>
+                        <option value="triangle">📐 실로폰 (삼각파)</option>
+                        <option value="sawtooth">🪚 피아노 / 바이올린 (톱니파)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="kalimba-body">
+                <div class="kalimba-key" style="height: 110px; width: 35px;" onclick="playKalimba(523.25)">도<br><small>C5</small></div>
+                <div class="kalimba-key" style="height: 125px; width: 35px;" onclick="playKalimba(440.00)">라<br><small>A4</small></div>
+                <div class="kalimba-key" style="height: 140px; width: 35px;" onclick="playKalimba(349.23)">파<br><small>F4</small></div>
+                <div class="kalimba-key" style="height: 155px; width: 35px;" onclick="playKalimba(293.66)">레<br><small>D4</small></div>
+                <div class="kalimba-key" style="height: 165px; width: 35px;" onclick="playKalimba(261.63)">도<br><small>C4</small></div>
+                <div class="kalimba-key" style="height: 148px; width: 35px;" onclick="playKalimba(329.63)">미<br><small>E4</small></div>
+                <div class="kalimba-key" style="height: 133px; width: 35px;" onclick="playKalimba(392.00)">솔<br><small>G4</small></div>
+                <div class="kalimba-key" style="height: 118px; width: 35px;" onclick="playKalimba(493.88)">시<br><small>B4</small></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab4" class="tab-content">
+        <div id="quizPlayArea" class="quiz-container">
+            <div id="quizProgress" style="font-weight:bold; color:var(--primary); margin-bottom:10px;">문항 1 / 10</div>
+            <div id="quizQText" class="quiz-question">질문이 여기에 표시됩니다.</div>
+            <div id="quizOptions" class="quiz-options"></div>
+            <div id="quizFeedback" class="quiz-feedback">피드백</div>
+            
+            <div class="quiz-nav">
+                <button id="quizPrevBtn" class="quiz-btn" onclick="prevQuizQuestion()">◀ 이전 문제</button>
+                <span id="quizScore" style="font-weight:bold; color: var(--dark);">실시간 획득 점수: 0 / 10</span>
+                <button id="quizNextBtn" class="quiz-btn" onclick="nextQuizQuestion()">다음 문제 ▶</button>
+            </div>
+        </div>
+
+        <div id="quizResultArea" class="quiz-result-view">
+            <h2 style="color: var(--primary-dark); margin-top: 0;">🎉 테스트가 완료되었습니다!</h2>
+            <div style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--success);">
+                최종 점수: <span id="finalScoreVal">0</span> / 10 점
+            </div>
+            <p id="resultComment" style="font-weight: bold; color: #555; margin-bottom: 25px;">멋진 도전이었습니다! 다시 한번 만점을 목표로 도전해 보세요.</p>
+            <button class="quiz-btn" style="background: var(--success); padding: 12px 30px; font-size: 1.05rem;" onclick="restartQuiz()">다시 풀기 🔄</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let audioCtx = null;
+    let t1Time = 0, t2Time = 0, t3Time = 0;
+    
+    let t2Osc = null;
+    let t2GainNode = null;
+    let isT2Playing = false;
+
+    let t3ActiveFreq = 15;
+    let t3SignalDecay = 0.5;
+
+    const cStatic = document.getElementById('staticWaveCanvas');
+    const c1 = document.getElementById('canvasTab1');
+    const c2 = document.getElementById('canvasTab2');
+    const c3 = document.getElementById('canvasTab3');
+    
+    const ctxStatic = cStatic.getContext('2d');
+    const ctx1 = c1.getContext('2d');
+    const ctx2 = c2.getContext('2d');
+    const ctx3 = c3.getContext('2d');
+
+    function resizeCanvasToDisplaySize(canvas) {
+        const width = canvas.parentElement.clientWidth;
+        const height = 300; 
+        if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+            return true;
+        }
+        return false;
+    }
+
+    function switchTab(tabNum) {
+        initAudio();
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelectorAll('.tab-container .tab-btn')[tabNum - 1].classList.add('active');
+        document.getElementById(`tab${tabNum}`).classList.add('active');
+
+        const activeCanvas = document.querySelector(`.tab-content.active canvas[id^="canvasTab"]`);
+        if (activeCanvas) {
+            resizeCanvasToDisplaySize(activeCanvas);
+        }
+    }
+
+    window.addEventListener('resize', function() {
+        const w = c1.parentElement.clientWidth;
+        cStatic.width = w; cStatic.height = 160;
+        drawStaticWave();
+        const activeCanvas = document.querySelector(`.tab-content.active canvas[id^="canvasTab"]`);
+        if (activeCanvas) {
+            resizeCanvasToDisplaySize(activeCanvas);
+        }
+    });
+
+    function drawStaticWave() {
+        if (cStatic.width === 0) return;
+        ctxStatic.clearRect(0, 0, cStatic.width, cStatic.height);
+        const midY = cStatic.height / 2;
+        const amp = 35;
+        const wl = 160;
+        const startX = 0; 
+
+        ctxStatic.strokeStyle = '#555';
+        ctxStatic.lineWidth = 1;
+        ctxStatic.setLineDash([4, 4]);
+        ctxStatic.beginPath(); ctxStatic.moveTo(0, midY); ctxStatic.lineTo(cStatic.width, midY); ctxStatic.stroke();
+        ctxStatic.setLineDash([]);
+
+        ctxStatic.strokeStyle = '#7f8c8d';
+        ctxStatic.lineWidth = 3;
+        ctxStatic.beginPath();
+        for(let x=0; x<=cStatic.width; x++) {
+            let ang = (2 * Math.PI * (x - startX)) / wl;
+            let y = midY - amp * Math.sin(ang);
+            if(x===0) ctxStatic.moveTo(x,y); else ctxStatic.lineTo(x,y);
+        }
+        ctxStatic.stroke();
+
+        const m1x = startX + wl * 0.25;
+        const g1x = startX + wl * 0.75;
+        const m2x = startX + wl * 1.25;
+
+        ctxStatic.fillStyle = '#ff4757';
+        ctxStatic.beginPath(); ctxStatic.arc(m1x, midY - amp, 6, 0, Math.PI*2); ctxStatic.fill();
+        ctxStatic.font = 'bold 12px sans-serif';
+        ctxStatic.fillText('⛰️ 마루 (가장 높은 곳)', m1x - 30, midY - amp - 12);
+
+        ctxStatic.fillStyle = '#1e90ff';
+        ctxStatic.beginPath(); ctxStatic.arc(g1x, midY + amp, 6, 0, Math.PI*2); ctxStatic.fill();
+        ctxStatic.fillText('🕳️ 골 (가장 낮은 곳)', g1x - 30, midY + amp + 22);
+
+        ctxStatic.strokeStyle = '#2ecc71';
+        ctxStatic.lineWidth = 2;
+        ctxStatic.beginPath(); ctxStatic.moveTo(m1x, midY); ctxStatic.lineTo(m1x, midY - amp); ctxStatic.stroke();
+        ctxStatic.fillStyle = '#2ecc71';
+        ctxStatic.fillText('↕ 진폭', m1x + 8, midY - amp/2 + 4);
+
+        ctxStatic.strokeStyle = '#ffa502';
+        ctxStatic.lineWidth = 2;
+        ctxStatic.beginPath(); ctxStatic.moveTo(m1x, midY - amp); ctxStatic.lineTo(m2x, midY - amp); ctxStatic.stroke();
+        ctxStatic.fillStyle = '#ffa502';
+        ctxStatic.fillText('↔️ 파장 (마루~마루 거리)', (m1x + m2x)/2 - 60, midY - amp - 28);
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function toggleTone() {
+        initAudio();
+        const btn = document.getElementById('t2PlayBtn');
+        
+        if (!isT2Playing) {
+            t2Osc = audioCtx.createOscillator();
+            t2GainNode = audioCtx.createGain();
+            t2Osc.type = 'sine';
+            
+            t2Osc.connect(t2GainNode);
+            t2GainNode.connect(audioCtx.destination);
+            
+            updateTone();
+            t2Osc.start();
+            
+            isT2Playing = true;
+            btn.innerText = "⏸️ 일시 정지";
+            btn.classList.add('playing');
+        } else {
+            if (t2Osc) {
+                t2Osc.stop();
+                t2Osc.disconnect();
+                t2Osc = null;
+            }
+            isT2Playing = false;
+            btn.innerText = "▶ 소리 재생 (띠----)";
+            btn.classList.remove('playing');
+        }
+    }
+
+    function updateTone() {
+        const ampSlider = parseFloat(document.getElementById('t2SliderAmp').value);
+        const freqSlider = parseFloat(document.getElementById('t2SliderFreq').value);
+        
+        document.getElementById('t2AmpVal').innerText = ampSlider;
+        document.getElementById('t2FreqVal').innerText = freqSlider + 'Hz';
+        
+        if (isT2Playing && t2Osc && t2GainNode) {
+            t2Osc.frequency.setValueAtTime(freqSlider, audioCtx.currentTime);
+            const targetVolume = (ampSlider / 110) * 0.15;
+            t2GainNode.gain.setValueAtTime(targetVolume, audioCtx.currentTime);
+        }
+    }
+
+    function playKalimba(freq) {
+        initAudio();
+        const volMultiplier = parseFloat(document.getElementById('t3SliderAmp').value);
+        const waveType = document.getElementById('t3WaveType').value;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = waveType;
+        osc.frequency.value = freq;
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4 * volMultiplier, audioCtx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2);
+        t3ActiveFreq = freq;
+        t3SignalDecay = 1.0;
+    }
+
+    // 퀴즈 문항 디테일 정밀 수정 완료
+    const quizData = [
+        { q: "매질은 파동을 따라 이동한다. O, X?", o: ["O", "X"], a: 1, r: "매질은 제자리에서 진동하며 파동을 전달합니다." },
+        { q: "파동의 가장 높은 곳을 무엇이라 할까요?", o: ["골", "진폭", "마루", "파장"], a: 2, r: "파동에서 가장 높은 곳을 마루, 가낭 낮은 곳을 골이라 합니다." },
+        { q: "진동의 중심에서 마루나 골까지의 거리를 의미하는 단어는?", o: ["파장", "진폭", "진동수", "주기"], a: 1, r: "진폭은 진동 중심에서 마루나 골까지의 거리를 뜻합니다." },
+        { q: "이웃한 마루에서 다음 마루까지, 혹은 골에서 다음 골까지의 거리를 무엇이라 할까요?", o: ["진폭", "진동수", "파장", "매질"], a: 2, r: "파동이 1회 진동하는 동안 나아가는 거리를 파장이라고 합니다." },
+        { q: "(    )은(는) 파동이 1초 동안 진동하는 횟수를 나타내며 단위로 Hz(헤르츠)를 사용한다. (    )은(는)?", o: ["진동수", "주기", "진폭", "파장"], a: 0, r: "1초간 진동 횟수를 진동수라고 합니다. 1초동안 10번 진동한다면 10Hz입니다." },
+        { q: "소리의 세기(큰 소리와 작은 소리)를 결정하는 파동의 요소는?", o: ["진동수", "진폭", "파형", "파장"], a: 1, r: "진폭이 클수록 큰 소리가 나고, 진폭이 작을수록 작은 소리가 납니다." },
+        { q: "소리의 높낮이(높은 소리와 낮은 소리)를 결정하는 파동의 요소는?", o: ["진폭", "파형", "매질", "진동수"], a: 3, r: "진동수가 많을수록(클수록) 높은 소리가 나고, 적을수록 낮은 소리가 납니다." },
+        { q: "같은 높이와 크기의 음을 연주해도 피아노와 바이올린 소리가 다르게 들리는 원인은?", o: ["진폭의 차이", "진동수의 차이", "파형(음색)의 차이", "속력의 차이"], a: 2, r: "소리의 모양새인 파형에 따라 악기 고유의 개성인 '음색'이 결정됩니다." },
+        { q: "물결파가 퍼져 나갈 때 물 위에 떠 있는 나뭇잎의 움직임은?", o: ["파동과 함께 앞으로 이동한다.", "제자리에서 위아래로만 진동한다.", "원 모양을 그리며 회전한다.", "아래로 가라앉는다."], a: 1, r: "매질인 물은 이동하지 않으므로 나뭇잎도 제자리에서 상하 진동만 수행합니다." },
+        { q: "소리가 전달될 때 매질의 역할을 해줄 수 없는 환경은?", o: ["물 속", "철길 철로", "공기 중", "아무것도 없는 우주 공간(진공)"], a: 3, r: "소리는 음파(종파)로서 반드시 매질이 있어야 하며, 매질이 없는 진공에서는 전달되지 않습니다." }
+    ];
+
+    let currentQIdx = 0;
+    let quizUserAnswers = new Array(quizData.length).fill(null);
+
+    function initQuiz() {
+        currentQIdx = 0;
+        quizUserAnswers.fill(null);
+        document.getElementById('quizPlayArea').style.display = 'block';
+        document.getElementById('quizResultArea').style.display = 'none';
+        showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+        document.getElementById('quizFeedback').style.display = 'none';
+        document.getElementById('quizPrevBtn').disabled = (currentQIdx === 0);
+        
+        if (currentQIdx === quizData.length - 1) {
+            document.getElementById('quizNextBtn').innerText = "결과 제출 🏁";
+        } else {
+            document.getElementById('quizNextBtn').innerText = "다음 문제 ▶";
+        }
+
+        document.getElementById('quizProgress').innerText = `문항 ${currentQIdx + 1} / ${quizData.length}`;
+        
+        let tempScore = calculateCurrentScore();
+        document.getElementById('quizScore').innerText = `현재 획득 점수: ${tempScore} / ${quizData.length}`;
+        
+        const qItem = quizData[currentQIdx];
+        document.getElementById('quizQText').innerText = `Q. ${qItem.q}`;
+        
+        const optionsDiv = document.getElementById('quizOptions');
+        optionsDiv.innerHTML = '';
+        
+        qItem.o.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-option';
+            btn.innerText = opt;
+            btn.onclick = () => selectQuizAnswer(idx);
+            
+            if (quizUserAnswers[currentQIdx] !== null) {
+                if (idx === qItem.a) {
+                    btn.classList.add('correct');
+                } else if (idx === quizUserAnswers[currentQIdx]) {
+                    btn.classList.add('incorrect');
+                }
+            }
+            optionsDiv.appendChild(btn);
+        });
+
+        if (quizUserAnswers[currentQIdx] !== null) {
+            exposeFeedback(quizUserAnswers[currentQIdx] === qItem.a);
+        }
+    }
+
+    function selectQuizAnswer(selectedIdx) {
+        if (quizUserAnswers[currentQIdx] !== null) return;
+        
+        quizUserAnswers[currentQIdx] = selectedIdx;
+        const qItem = quizData[currentQIdx];
+        const options = document.getElementById('quizOptions').children;
+        
+        const isCorrect = (selectedIdx === qItem.a);
+        if (isCorrect) {
+            options[selectedIdx].classList.add('correct');
+        } else {
+            options[selectedIdx].classList.add('incorrect');
+            options[qItem.a].classList.add('correct');
+        }
+        
+        let tempScore = calculateCurrentScore();
+        document.getElementById('quizScore').innerText = `현재 획득 점수: ${tempScore} / ${quizData.length}`;
+        exposeFeedback(isCorrect);
+    }
+
+    function exposeFeedback(isCorrect) {
+        const qItem = quizData[currentQIdx];
+        const fBox = document.getElementById('quizFeedback');
+        if (isCorrect) {
+            fBox.innerText = `⭕ 정답입니다! : ${qItem.r}`;
+            fBox.style.backgroundColor = '#d4edda';
+            fBox.style.color = '#155724';
+        } else {
+            fBox.innerText = `❌ 오답입니다. : ${qItem.r}`;
+            fBox.style.backgroundColor = '#f8d7da';
+            fBox.style.color = '#721c24';
+        }
+        fBox.style.display = 'block';
+    }
+
+    function calculateCurrentScore() {
+        let s = 0;
+        for (let i = 0; i < quizData.length; i++) {
+            if (quizUserAnswers[i] !== null && quizUserAnswers[i] === quizData[i].a) {
+                s++;
+            }
+        }
+        return s;
+    }
+
+    function prevQuizQuestion() {
+        if (currentQIdx > 0) {
+            currentQIdx--;
+            showQuizQuestion();
+        }
+    }
+
+    function nextQuizQuestion() {
+        if (quizUserAnswers[currentQIdx] === null) {
+            alert("정답 보기를 선택해야 다음으로 진행할 수 있습니다!");
+            return;
+        }
+
+        if (currentQIdx === quizData.length - 1) {
+            const finalScore = calculateCurrentScore();
+            document.getElementById('quizPlayArea').style.display = 'none';
+            document.getElementById('quizResultArea').style.display = 'flex';
+            document.getElementById('finalScoreVal').innerText = finalScore;
+            
+            if (finalScore === 10) {
+                document.getElementById('resultComment').innerText = "💯 완벽합니다! 파동과 소리의 성질을 완벽하게 마스터하셨습니다! 🎉";
+            } else if (finalScore >= 7) {
+                document.getElementById('resultComment').innerText = "👍 훌륭합니다! 조금만 더 복습하면 만점도 문제없어요!";
+            } else {
+                document.getElementById('resultComment').innerText = "📐 1~3번 실습 탭을 이용하여 파동 개념을 다시 짚어본 후 도전해 보세요!";
+            }
+        } else {
+            currentQIdx++;
+            showQuizQuestion();
+        }
+    }
+
+    function restartQuiz() {
+        initQuiz();
+    }
+
+    // 메인 주기적 애니메이션 렌더러
+    function mainRender() {
+        // TAB 1 (실시간 파동 형태 및 탁구공 매질 상하 진동 시각화 구현)
+        if (document.getElementById('tab1').classList.contains('active')) {
+            if (c1.width > 0) {
+                ctx1.clearRect(0, 0, c1.width, c1.height);
+                const amp = parseFloat(document.getElementById('t1SliderAmp').value);
+                const wave = parseFloat(document.getElementById('t1SliderWave').value);
+                const freq = parseFloat(document.getElementById('t1SliderFreq').value);
+                
+                document.getElementById('t1AmpVal').innerText = amp;
+                document.getElementById('t1WaveVal').innerText = wave; // px 문자열 노출 제거 완료
+                document.getElementById('t1FreqVal').innerText = freq.toFixed(1) + 'Hz';
+                
+                const midY = c1.height / 2;
+                
+                // 중심 기준선 그리기
+                ctx1.strokeStyle = '#444';
+                ctx1.beginPath(); ctx1.moveTo(0, midY); ctx1.lineTo(c1.width, midY); ctx1.stroke();
+                
+                // 파동 곡선 그리기
+                ctx1.strokeStyle = '#4a90e2'; ctx1.lineWidth = 4; ctx1.beginPath();
+                let pts = [];
+                for(let x=0; x<=c1.width; x++) {
+                    let ang = (2 * Math.PI * x) / wave - t1Time;
+                    let y = midY + amp * Math.sin(ang);
+                    if(x===0) ctx1.moveTo(x,y); else ctx1.lineTo(x,y);
+                    pts.push({x:x, y:y, ang:ang});
+                }
+                ctx1.stroke();
+                
+                // 마루와 골 포인트 강조 표시
+                let marus = [], gols = [];
+                for(let i=1; i<pts.length-1; i++) {
+                    let sv = Math.sin(pts[i].ang);
+                    if(sv > 0.998 && pts[i].y < pts[i-1].y && pts[i].y < pts[i+1].y) marus.push(pts[i]);
+                    if(sv < -0.998 && pts[i].y > pts[i-1].y && pts[i].y > pts[i+1].y) gols.push(pts[i]);
+                }
+                marus.forEach(p => { ctx1.fillStyle = '#ff4757'; ctx1.beginPath(); ctx1.arc(p.x, p.y, 5, 0, Math.PI*2); ctx1.fill(); });
+                gols.forEach(p => { ctx1.fillStyle = '#1e90ff'; ctx1.beginPath(); ctx1.arc(p.x, p.y, 5, 0, Math.PI*2); ctx1.fill(); });
+                
+                // [선생님 제안 사항 반영]: 파동 중심축(화면 절반 X좌표)에 고정되어 위아래로만 흔들리는 주황색 탁구공(매질) 렌더링
+                const ballX = Math.floor(c1.width / 2);
+                if (pts[ballX]) {
+                    // 수직 이동 가이드 점선 표시 (X좌표가 고정되어 있음을 증명)
+                    ctx1.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                    ctx1.lineWidth = 1;
+                    ctx1.setLineDash([3, 3]);
+                    ctx1.beginPath(); ctx1.moveTo(ballX, 0); ctx1.lineTo(ballX, c1.height); ctx1.stroke();
+                    ctx1.setLineDash([]);
+                    
+                    // 탁구공(매질) 본체 그리기
+                    ctx1.fillStyle = '#ff9f43'; // 화사한 주황색 탁구공
+                    ctx1.strokeStyle = '#fff';
+                    ctx1.lineWidth = 2;
+                    ctx1.beginPath();
+                    ctx1.arc(ballX, pts[ballX].y, 10, 0, Math.PI * 2);
+                    ctx1.fill();
+                    ctx1.stroke();
+                    
+                    // 탁구공 옆에 안내 텍스트 노출
+                    ctx1.fillStyle = '#ff9f43';
+                    ctx1.font = 'bold 11px sans-serif';
+                    ctx1.fillText('🏓 매질: 제자리 위아래 진동', ballX + 15, pts[ballX].y + 4);
+                }
+                
+                t1Time += (freq * 0.04);
+            }
+        }
+
+        // TAB 2 (음파 가상실험)
+        if (document.getElementById('tab2').classList.contains('active')) {
+            if (c2.width > 0) {
+                ctx2.clearRect(0, 0, c2.width, c2.height);
+                const midY = c2.height / 2;
+                
+                const t2Amp = parseFloat(document.getElementById('t2SliderAmp').value);
+                const t2Freq = parseFloat(document.getElementById('t2SliderFreq').value);
+                
+                ctx2.strokeStyle = '#333'; ctx2.beginPath(); ctx2.moveTo(0, midY); ctx2.lineTo(c2.width, midY); ctx2.stroke();
+                ctx2.strokeStyle = isT2Playing ? '#2ecc71' : '#7f8c8d'; ctx2.lineWidth = 4; ctx2.beginPath();
+                
+                const virtualWavelength = 40000 / t2Freq; 
+                
+                for(let x=0; x<=c2.width; x++) {
+                    let ang = (2 * Math.PI * x) / virtualWavelength - t2Time;
+                    let y = midY + t2Amp * Math.sin(ang);
+                    if(x===0) ctx2.moveTo(x,y); else ctx2.lineTo(x,y);
+                }
+                ctx2.stroke();
+                
+                if (isT2Playing) {
+                    t2Time += (t2Freq * 0.0007);
+                }
+            }
+        }
+
+        // TAB 3 (악기의 음색 알아보기)
+        if (document.getElementById('tab3').classList.contains('active')) {
+            if (c3.width > 0) {
+                ctx3.clearRect(0, 0, c3.width, c3.height);
+                const midY = c3.height / 2;
+                const ampVol = parseFloat(document.getElementById('t3SliderAmp').value);
+                const wType = document.getElementById('t3WaveType').value;
+                document.getElementById('t3AmpVal').innerText = ampVol > 1.1 ? "매우 큼" : ampVol > 0.6 ? "보통" : "작음";
+                
+                ctx3.strokeStyle = '#333'; ctx3.beginPath(); ctx3.moveTo(0, midY); ctx3.lineTo(c3.width, midY); ctx3.stroke();
+                ctx3.strokeStyle = '#9c27b0'; ctx3.lineWidth = 3; ctx3.beginPath();
+                
+                let drawFreq = t3ActiveFreq * 0.04;
+                let drawAmp = (40 * ampVol * (t3SignalDecay + 0.2));
+                for(let x=0; x<=c3.width; x++) {
+                    let angle = (x * drawFreq / 100) - t3Time;
+                    let val = Math.sin(angle);
+                    if (wType === 'triangle') val = Math.asin(Math.sin(angle)) * (2 / Math.PI);
+                    if (wType === 'sawtooth') val = (2 * (angle / Math.PI - Math.floor(0.5 + angle / Math.PI)));
+                    let y = midY + drawAmp * val;
+                    if(x===0) ctx3.moveTo(x,y); else ctx3.lineTo(x,y);
+                }
+                ctx3.stroke();
+                if(t3SignalDecay > 0) t3SignalDecay -= 0.01;
+                t3Time += 0.1;
+            }
+        }
+        requestAnimationFrame(mainRender);
+    }
+
+    window.onload = function() {
+        const w = c1.parentElement.clientWidth;
+        cStatic.width = w; cStatic.height = 160;
+        resizeCanvasToDisplaySize(c1);
+        resizeCanvasToDisplaySize(c2);
+        resizeCanvasToDisplaySize(c3);
+        drawStaticWave();
+        initQuiz();
+        mainRender();
+    };
+</script>
+</body>
+</html>
