@@ -342,8 +342,8 @@
     <div class="subtitle">중학교 2학년 과학 - 탭을 이동하며 파동의 성질을 마스터해 보세요!</div>
 
     <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab(1)">🔎 1. 파동 개념 익히기</button>
-        <button class="tab-btn" onclick="switchTab(2)">🌊 2. 음파 가상실험</button>
+        <button class="tab-btn active" onclick="switchTab(1)">🌊 1. 파동 개념 익히기</button>
+        <button class="tab-btn" onclick="switchTab(2)">🎵 2. 음파 가상실험</button>
         <button class="tab-btn" onclick="switchTab(3)">🎹 3. 악기의 음색 알아보기</button>
         <button class="tab-btn" onclick="switchTab(4)">📝 4. 퀴즈</button>
     </div>
@@ -382,6 +382,15 @@
     </div>
 
     <div id="tab2" class="tab-content">
+        <div class="info-panel" style="grid-template-columns: 1fr; margin-bottom: 15px;">
+            <div class="info-box" style="border-left: 5px solid var(--success); background-color: #f4fbf7;">
+                <strong>📢 소리는 어떻게 전달될까?</strong> 
+                <span class="desc-text" style="display: block; margin-top: 5px;">
+                    우리가 듣는 대부분의 소리는 기체인 <strong>'공기'</strong>라는 매질을 통해 전해져요. 물론 물(액체)이나 철길(고체)을 통해서도 소리는 아주 잘 달릴 수 있답니다! 하지만 아무것도 없는 <strong>우주나 진공 상태에서는 파동을 배달해 줄 '매질'이 전혀 없기 때문에 소리가 절대 전달되지 않아요!</strong> 외계인과 우주에서 대화하려면 무전기가 필수겠죠? 🚀
+                </span>
+            </div>
+        </div>
+
         <button id="t2PlayBtn" class="play-btn" onclick="toggleTone()">▶ 소리 재생 (띠----)</button>
         <div class="canvas-container">
             <canvas id="canvasTab2"></canvas>
@@ -835,9 +844,10 @@
                     ctx1.fill();
                     ctx1.stroke();
                     
+                    // [명칭 수정]: 매질(탁구공) 표기를 매질의 제자리 진동 성질을 강조하도록 수정
                     ctx1.fillStyle = '#ff9f43';
                     ctx1.font = 'bold 11px sans-serif';
-                    ctx1.fillText('매질: 제자리 위아래 진동', ballX + 15, pts[ballX].y + 4);
+                    ctx1.fillText('🟢 매질: 제자리에서 위아래로만 진동', ballX + 15, pts[ballX].y + 4);
                 }
                 
                 t1Time += (freq * 0.04);
