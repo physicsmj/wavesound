@@ -388,7 +388,7 @@
         </div>
         <div class="control-panel">
             <div class="control-group">
-                <div class="control-label"><span>🔊 소리 세기 설정 (진폭 조절)</span><span id="t2AmpVal" class="value">보통</span></div>
+                <div class="control-label"><span>🔊 소리 세기 설정 (진폭 조절)</span><span id="t2AmpVal" class="value">50</span></div>
                 <input type="range" id="t2SliderAmp" min="10" max="110" value="50" oninput="updateTone()">
             </div>
             <div class="control-group">
@@ -609,7 +609,7 @@
         document.getElementById('t2AmpVal').innerText = ampSlider;
         document.getElementById('t2FreqVal').innerText = freqSlider + 'Hz';
         
-        if (isT2Playing && t2Osc && t2GainNode) {
+        if (t2Osc && t2GainNode) {
             t2Osc.frequency.setValueAtTime(freqSlider, audioCtx.currentTime);
             const targetVolume = (ampSlider / 110) * 0.15;
             t2GainNode.gain.setValueAtTime(targetVolume, audioCtx.currentTime);
@@ -635,18 +635,17 @@
         t3SignalDecay = 1.0;
     }
 
-    // 퀴즈 문항 디테일 정밀 수정 완료
     const quizData = [
         { q: "매질은 파동을 따라 이동한다. O, X?", o: ["O", "X"], a: 1, r: "매질은 제자리에서 진동하며 파동을 전달합니다." },
         { q: "파동의 가장 높은 곳을 무엇이라 할까요?", o: ["골", "진폭", "마루", "파장"], a: 2, r: "파동에서 가장 높은 곳을 마루, 가낭 낮은 곳을 골이라 합니다." },
-        { q: "진동의 중심에서 마루나 골까지의 거리를 의미하는 단어는?", o: ["파장", "진폭", "진동수", "주기"], a: 1, r: "진폭은 진동 중심에서 마루나 골까지의 거리를 뜻합니다." },
+        { q: "진동의 중심에서 마루나 골까지의 거리를 의미하는 단어는?", o: ["파장", "진폭", "진동수", "주기"], a: 1, r: "진동 중심에서 마루나 골까지의 거리는 진폭입니다." },
         { q: "이웃한 마루에서 다음 마루까지, 혹은 골에서 다음 골까지의 거리를 무엇이라 할까요?", o: ["진폭", "진동수", "파장", "매질"], a: 2, r: "파동이 1회 진동하는 동안 나아가는 거리를 파장이라고 합니다." },
         { q: "(    )은(는) 파동이 1초 동안 진동하는 횟수를 나타내며 단위로 Hz(헤르츠)를 사용한다. (    )은(는)?", o: ["진동수", "주기", "진폭", "파장"], a: 0, r: "1초간 진동 횟수를 진동수라고 합니다. 1초동안 10번 진동한다면 10Hz입니다." },
         { q: "소리의 세기(큰 소리와 작은 소리)를 결정하는 파동의 요소는?", o: ["진동수", "진폭", "파형", "파장"], a: 1, r: "진폭이 클수록 큰 소리가 나고, 진폭이 작을수록 작은 소리가 납니다." },
         { q: "소리의 높낮이(높은 소리와 낮은 소리)를 결정하는 파동의 요소는?", o: ["진폭", "파형", "매질", "진동수"], a: 3, r: "진동수가 많을수록(클수록) 높은 소리가 나고, 적을수록 낮은 소리가 납니다." },
         { q: "같은 높이와 크기의 음을 연주해도 피아노와 바이올린 소리가 다르게 들리는 원인은?", o: ["진폭의 차이", "진동수의 차이", "파형(음색)의 차이", "속력의 차이"], a: 2, r: "소리의 모양새인 파형에 따라 악기 고유의 개성인 '음색'이 결정됩니다." },
         { q: "물결파가 퍼져 나갈 때 물 위에 떠 있는 나뭇잎의 움직임은?", o: ["파동과 함께 앞으로 이동한다.", "제자리에서 위아래로만 진동한다.", "원 모양을 그리며 회전한다.", "아래로 가라앉는다."], a: 1, r: "매질인 물은 이동하지 않으므로 나뭇잎도 제자리에서 상하 진동만 수행합니다." },
-        { q: "소리가 전달될 때 매질의 역할을 해줄 수 없는 환경은?", o: ["물 속", "철길 철로", "공기 중", "아무것도 없는 우주 공간(진공)"], a: 3, r: "소리는 음파(종파)로서 반드시 매질이 있어야 하며, 매질이 없는 진공에서는 전달되지 않습니다." }
+        { q: "소리가 전달될 때 매질의 역할을 해줄 수 없는 환경은?", o: ["물 속", "철길 철로", "공기 중", "아무것도 없는 우주 공간(진공)"], a: 3, r: "소리는 반드시 매질이 있어야 하며, 매질이 없는 진공에서는 전달되지 않습니다." }
     ];
 
     let currentQIdx = 0;
@@ -783,9 +782,8 @@
         initQuiz();
     }
 
-    // 메인 주기적 애니메이션 렌더러
     function mainRender() {
-        // TAB 1 (실시간 파동 형태 및 탁구공 매질 상하 진동 시각화 구현)
+        // TAB 1
         if (document.getElementById('tab1').classList.contains('active')) {
             if (c1.width > 0) {
                 ctx1.clearRect(0, 0, c1.width, c1.height);
@@ -794,16 +792,14 @@
                 const freq = parseFloat(document.getElementById('t1SliderFreq').value);
                 
                 document.getElementById('t1AmpVal').innerText = amp;
-                document.getElementById('t1WaveVal').innerText = wave; // px 문자열 노출 제거 완료
+                document.getElementById('t1WaveVal').innerText = wave;
                 document.getElementById('t1FreqVal').innerText = freq.toFixed(1) + 'Hz';
                 
                 const midY = c1.height / 2;
                 
-                // 중심 기준선 그리기
                 ctx1.strokeStyle = '#444';
                 ctx1.beginPath(); ctx1.moveTo(0, midY); ctx1.lineTo(c1.width, midY); ctx1.stroke();
                 
-                // 파동 곡선 그리기
                 ctx1.strokeStyle = '#4a90e2'; ctx1.lineWidth = 4; ctx1.beginPath();
                 let pts = [];
                 for(let x=0; x<=c1.width; x++) {
@@ -814,7 +810,6 @@
                 }
                 ctx1.stroke();
                 
-                // 마루와 골 포인트 강조 표시
                 let marus = [], gols = [];
                 for(let i=1; i<pts.length-1; i++) {
                     let sv = Math.sin(pts[i].ang);
@@ -824,18 +819,15 @@
                 marus.forEach(p => { ctx1.fillStyle = '#ff4757'; ctx1.beginPath(); ctx1.arc(p.x, p.y, 5, 0, Math.PI*2); ctx1.fill(); });
                 gols.forEach(p => { ctx1.fillStyle = '#1e90ff'; ctx1.beginPath(); ctx1.arc(p.x, p.y, 5, 0, Math.PI*2); ctx1.fill(); });
                 
-                // [선생님 제안 사항 반영]: 파동 중심축(화면 절반 X좌표)에 고정되어 위아래로만 흔들리는 주황색 탁구공(매질) 렌더링
                 const ballX = Math.floor(c1.width / 2);
                 if (pts[ballX]) {
-                    // 수직 이동 가이드 점선 표시 (X좌표가 고정되어 있음을 증명)
                     ctx1.strokeStyle = 'rgba(255, 255, 255, 0.15)';
                     ctx1.lineWidth = 1;
                     ctx1.setLineDash([3, 3]);
                     ctx1.beginPath(); ctx1.moveTo(ballX, 0); ctx1.lineTo(ballX, c1.height); ctx1.stroke();
                     ctx1.setLineDash([]);
                     
-                    // 탁구공(매질) 본체 그리기
-                    ctx1.fillStyle = '#ff9f43'; // 화사한 주황색 탁구공
+                    ctx1.fillStyle = '#ff9f43';
                     ctx1.strokeStyle = '#fff';
                     ctx1.lineWidth = 2;
                     ctx1.beginPath();
@@ -843,10 +835,9 @@
                     ctx1.fill();
                     ctx1.stroke();
                     
-                    // 탁구공 옆에 안내 텍스트 노출
                     ctx1.fillStyle = '#ff9f43';
                     ctx1.font = 'bold 11px sans-serif';
-                    ctx1.fillText('🏓 매질: 제자리 위아래 진동', ballX + 15, pts[ballX].y + 4);
+                    ctx1.fillText('매질: 제자리 위아래 진동', ballX + 15, pts[ballX].y + 4);
                 }
                 
                 t1Time += (freq * 0.04);
