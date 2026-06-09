@@ -57,8 +57,8 @@
 
         .tab-btn {
             flex: 1;
-            padding: 12px 10px;
-            font-size: 0.95rem;
+            padding: 12px 5px;
+            font-size: 0.9rem;
             font-weight: bold;
             background: #e0e0e0;
             border: none;
@@ -342,10 +342,11 @@
     <div class="subtitle">중학교 2학년 과학 - 탭을 이동하며 파동의 성질을 마스터해 보세요!</div>
 
     <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab(1)">🌊 1. 파동 개념 익히기</button>
-        <button class="tab-btn" onclick="switchTab(2)">🎵 2. 소리(음파) 가상실험</button>
-        <button class="tab-btn" onclick="switchTab(3)">🎹 3. 악기의 음색 알아보기</button>
-        <button class="tab-btn" onclick="switchTab(4)">📝 4. 퀴즈</button>
+        <button class="tab-btn active" onclick="switchTab(1)">🌊 1. 개념 익히기</button>
+        <button class="tab-btn" onclick="switchTab(2)">🎵 2. 소리 가상실험</button>
+        <button class="tab-btn" onclick="switchTab(3)">🎹 3. 악기 음색</button>
+        <button class="tab-btn" onclick="switchTab(4)">🎙️ 4. 내 목소리 분석</button>
+        <button class="tab-btn" onclick="switchTab(5)">📝 5. 퀴즈</button>
     </div>
 
     <div id="tab1" class="tab-content active">
@@ -443,6 +444,28 @@
     </div>
 
     <div id="tab4" class="tab-content">
+        <div class="info-panel" style="grid-template-columns: 1fr; margin-bottom: 15px;">
+            <div class="info-box" style="border-left: 5px solid var(--primary); background-color: #f0f6ff;">
+                <strong>🎙️ 마이크로 소리의 3요소 관찰하기!</strong>
+                <span class="desc-text" style="display: block; margin-top: 5px;">
+                    1. <strong>소리의 크기(진폭):</strong> 아~ 하고 큰 소리를 내면 파형이 위아래로 크게 춤을 춰요!<br>
+                    2. <strong>소리의 높낮이(진동수):</strong> 높은 소리를 내면 파형이 촘촘(밀)해지고, 낮은 소리를 내면 넓어져요!<br>
+                    3. <strong>일시정지 기능:</strong> 파형을 멈춰 두고 정지된 상태의 마루, 골, 진폭을 자로 재듯 꼼꼼히 관찰해 보세요.
+                </span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="micStartBtn" class="play-btn" style="margin-bottom: 0; flex: 1;" onclick="startMic()">🎙️ 마이크 켜기</button>
+            <button id="micFreezeBtn" class="play-btn" style="margin-bottom: 0; flex: 1; background: var(--dark);" onclick="toggleMicFreeze()" disabled>⏸️ 파형 일시정지</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvasTab4"></canvas>
+        </div>
+    </div>
+
+    <div id="tab5" class="tab-content">
         <div id="quizPlayArea" class="quiz-container">
             <div id="quizProgress" style="font-weight:bold; color:var(--primary); margin-bottom:10px;">문항 1 / 10</div>
             <div id="quizQText" class="quiz-question">질문이 여기에 표시됩니다.</div>
@@ -478,15 +501,26 @@
     let t3ActiveFreq = 15;
     let t3SignalDecay = 0.5;
 
+    // 마이크(탭4) 관련 변수
+    let micStream = null;
+    let micSource = null;
+    let micAnalyser = null;
+    let micDataArray = null;
+    let isMicActive = false;
+    let isMicFrozen = false;
+    let frozenData = null; // 일시정지 시 데이터를 보관할 배열
+
     const cStatic = document.getElementById('staticWaveCanvas');
     const c1 = document.getElementById('canvasTab1');
     const c2 = document.getElementById('canvasTab2');
     const c3 = document.getElementById('canvasTab3');
+    const c4 = document.getElementById('canvasTab4');
     
     const ctxStatic = cStatic.getContext('2d');
     const ctx1 = c1.getContext('2d');
     const ctx2 = c2.getContext('2d');
     const ctx3 = c3.getContext('2d');
+    const ctx4 = c4.getContext('2d');
 
     function resizeCanvasToDisplaySize(canvas) {
         const width = canvas.parentElement.clientWidth;
@@ -501,6 +535,11 @@
 
     function switchTab(tabNum) {
         initAudio();
+        
+        // [버그 수정] 탭 전환 시 2번 탭 소리가 재생 중이면 꺼줍니다.
+        if (isT2Playing) {
+            toggleTone();
+        }
         
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -646,6 +685,73 @@
         t3SignalDecay = 1.0;
     }
 
+    // 마이크 작동 함수 (탭 4)
+    async function startMic() {
+        initAudio();
+        const startBtn = document.getElementById('micStartBtn');
+        const freezeBtn = document.getElementById('micFreezeBtn');
+
+        if (!isMicActive) {
+            try {
+                // 브라우저 마이크 권한 요청
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                micSource = audioCtx.createMediaStreamSource(micStream);
+                micAnalyser = audioCtx.createAnalyser();
+                
+                // 파형 관찰을 위해 적절한 크기의 FFT 사이즈 할당 (2048)
+                micAnalyser.fftSize = 2048;
+                const bufferLength = micAnalyser.frequencyBinCount;
+                micDataArray = new Uint8Array(bufferLength);
+                frozenData = new Uint8Array(bufferLength);
+
+                micSource.connect(micAnalyser);
+                // 스피커 하울링을 방지하기 위해 destination(출력)에는 연결하지 않고 수음 및 시각화만 수행합니다.
+
+                isMicActive = true;
+                isMicFrozen = false;
+                startBtn.innerText = "🛑 마이크 끄기";
+                startBtn.classList.add('playing');
+                freezeBtn.disabled = false;
+                freezeBtn.innerText = "⏸️ 파형 일시정지";
+            } catch (err) {
+                console.error(err);
+                alert("마이크 권한을 승인하지 않았거나 마이크 장치를 찾을 수 없습니다.");
+            }
+        } else {
+            // 마이크 중지 절차
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+            }
+            if (micSource) micSource.disconnect();
+            micStream = null;
+            micSource = null;
+            micAnalyser = null;
+            
+            isMicActive = false;
+            isMicFrozen = false;
+            startBtn.innerText = "🎙️ 마이크 켜기";
+            startBtn.classList.remove('playing');
+            freezeBtn.disabled = true;
+            freezeBtn.innerText = "⏸️ 파형 일시정지";
+        }
+    }
+
+    // 마이크 파형 프리즈(일시정지) 토글
+    function toggleMicFreeze() {
+        if (!isMicActive) return;
+        const freezeBtn = document.getElementById('micFreezeBtn');
+        
+        if (!isMicFrozen) {
+            isMicFrozen = true;
+            freezeBtn.innerText = "▶️ 다시 실시간 시각화";
+            freezeBtn.style.background = "var(--success)";
+        } else {
+            isMicFrozen = false;
+            freezeBtn.innerText = "⏸️ 파형 일시정지";
+            freezeBtn.style.background = "var(--dark)";
+        }
+    }
+
     const quizData = [
         { q: "매질은 파동을 따라 이동한다. O, X?", o: ["O", "X"], a: 1, r: "매질은 제자리에서 진동하며 파동을 전달합니다." },
         { q: "파동의 가장 높은 곳을 무엇이라 할까요??", o: ["골", "진폭", "마루", "파장"], a: 2, r: "파동에서 가장 높은 곳을 마루, 가낭 낮은 곳을 골이라 합니다." },
@@ -653,7 +759,7 @@
         { q: "이웃한 마루에서 다음 마루까지, 혹은 골에서 다음 골까지의 거리를 무엇이라 할까요?", o: ["진폭", "진동수", "파장", "매질"], a: 2, r: "파동이 1회 진동하는 동안 나아가는 거리를 파장이라고 합니다." },
         { q: "(    )은(는) 파동이 1초 동안 진동하는 횟수를 나타내며 단위로 Hz(헤르츠)를 사용한다. (    )은(는)?", o: ["진동수", "주기", "진폭", "파장"], a: 0, r: "1초간 진동 횟수를 진동수라고 합니다. 1초동안 10번 진동한다면 10Hz입니다." },
         { q: "소리의 세기(큰 소리와 작은 소리)를 결정하는 파동의 요소는?", o: ["진동수", "진폭", "파형", "파장"], a: 1, r: "진폭이 클수록 큰 소리가 나고, 진폭이 작을수록 작은 소리가 납니다." },
-        { q: "소리의 높낮이(높은 소리와 낮은 소리)를 결정하는 파동의 요소는?", o: ["진폭", "파형", "매질", "진동수"], a: 3, r: "진동수가 많을수록(클수록) 높은 소리가 나고, 적을수록 낮은 소리가 납니다." },
+        { q: "소리의 높낮이(높은 소리와 낮은 소)를 결정하는 파동의 요소는?", o: ["진폭", "파형", "매질", "진동수"], a: 3, r: "진동수가 많을수록(클수록) 높은 소리가 나고, 적을수록 낮은 소리가 납니다." },
         { q: "같은 높이와 크기의 음을 연주해도 피아노와 바이올린 소리가 다르게 들리는 원인은?", o: ["진폭의 차이", "진동수의 차이", "파형(음색)의 차이", "속력의 차이"], a: 2, r: "소리의 모양새인 파형에 따라 악기 고유의 개성인 '음색'이 결정됩니다." },
         { q: "물결파가 퍼져 나갈 때 물 위에 떠 있는 나뭇잎의 움직임은?", o: ["파동과 함께 앞으로 이동한다.", "제자리에서 위아래로만 진동한다.", "원 모양을 그리며 회전한다.", "아래로 가라앉는다."], a: 1, r: "매질인 물은 이동하지 않으므로 나뭇잎도 제자리에서 상하 진동만 수행합니다." },
         { q: "소리가 전달될 때 매질의 역할을 해줄 수 없는 환경은?", o: ["물 속", "철길 철로", "공기 중", "아무것도 없는 우주 공간(진공)"], a: 3, r: "소리는 반드시 매질이 있어야 하며, 매질이 없는 진공에서는 전달되지 않습니다." }
@@ -665,6 +771,11 @@
     function initQuiz() {
         currentQIdx = 0;
         quizUserAnswers.fill(null);
+        
+        // [버그 수정] 다시 풀기 클릭 시 퀴즈 요소 스타일 및 해설 박스 완전 초기화
+        document.getElementById('quizFeedback').style.display = 'none';
+        document.getElementById('quizScore').innerText = `실시간 획득 점수: 0 / ${quizData.length}`;
+        
         document.getElementById('quizPlayArea').style.display = 'block';
         document.getElementById('quizResultArea').style.display = 'none';
         showQuizQuestion();
@@ -683,7 +794,7 @@
         document.getElementById('quizProgress').innerText = `문항 ${currentQIdx + 1} / ${quizData.length}`;
         
         let tempScore = calculateCurrentScore();
-        document.getElementById('quizScore').innerText = `현재 획득 점수: ${tempScore} / ${quizData.length}`;
+        document.getElementById('quizScore').innerText = `실시간 획득 점수: ${tempScore} / ${quizData.length}`;
         
         const qItem = quizData[currentQIdx];
         document.getElementById('quizQText').innerText = `Q. ${qItem.q}`;
@@ -728,7 +839,7 @@
         }
         
         let tempScore = calculateCurrentScore();
-        document.getElementById('quizScore').innerText = `현재 획득 점수: ${tempScore} / ${quizData.length}`;
+        document.getElementById('quizScore').innerText = `실시간 획득 점수: ${tempScore} / ${quizData.length}`;
         exposeFeedback(isCorrect);
     }
 
@@ -781,7 +892,7 @@
             } else if (finalScore >= 7) {
                 document.getElementById('resultComment').innerText = "👍 훌륭합니다! 조금만 더 복습하면 만점도 문제없어요!";
             } else {
-                document.getElementById('resultComment').innerText = "📐 1~3번 실습 탭을 이용하여 파동 개념을 다시 짚어본 후 도전해 보세요!";
+                document.getElementById('resultComment').innerText = "📐 1~4번 실습 탭을 이용하여 파동 개념을 다시 짚어본 후 도전해 보세요!";
             }
         } else {
             currentQIdx++;
@@ -846,7 +957,6 @@
                     ctx1.fill();
                     ctx1.stroke();
                     
-                    // [명칭 수정]: 매질(탁구공) 표기를 매질의 제자리 진동 성질을 강조하도록 수정
                     ctx1.fillStyle = '#ff9f43';
                     ctx1.font = 'bold 11px sans-serif';
                     ctx1.fillText('매질: 제자리에서 진동', ballX + 15, pts[ballX].y + 4);
@@ -910,6 +1020,54 @@
                 t3Time += 0.1;
             }
         }
+
+        // TAB 4 (🎙️ 내 목소리 실시간 분석 및 일시정지)
+        if (document.getElementById('tab4').classList.contains('active')) {
+            if (c4.width > 0) {
+                ctx4.clearRect(0, 0, c4.width, c4.height);
+                const midY = c4.height / 2;
+
+                // 중심선(진동 중심) 그리기
+                ctx4.strokeStyle = '#444';
+                ctx4.lineWidth = 1;
+                ctx4.beginPath(); ctx4.moveTo(0, midY); ctx4.lineTo(c4.width, midY); ctx4.stroke();
+
+                if (isMicActive && micAnalyser) {
+                    // 일시정지 상태가 아닐 때만 실시간 데이터 추출
+                    if (!isMicFrozen) {
+                        micAnalyser.getByteTimeDomainData(micDataArray);
+                        // 프리즈 대비를 위해 백업 배열에 복사
+                        frozenData.set(micDataArray);
+                    }
+
+                    ctx4.lineWidth = 3;
+                    ctx4.strokeStyle = isMicFrozen ? '#ff9f43' : '#2ecc71'; // 일시정지 시 주황색, 작동 중일 땐 초록색
+                    ctx4.beginPath();
+
+                    // 수음되는 타임도메인 파형 그리기
+                    const sliceWidth = c4.width / frozenData.length;
+                    let x = 0;
+
+                    for (let i = 0; i < frozenData.length; i++) {
+                        // 오디오 데이터는 0~255 사이의 값 (정중앙 128이 무음 상태)
+                        const v = frozenData[i] / 128.0;
+                        const y = v * midY;
+
+                        if (i === 0) ctx4.moveTo(x, y); else ctx4.lineTo(x, y);
+                        x += sliceWidth;
+                    }
+                    ctx4.lineTo(c4.width, midY);
+                    ctx4.stroke();
+                } else {
+                    // 마이크가 꺼져있을 때 기본 대기 안내 텍스트 표시
+                    ctx4.fillStyle = '#888';
+                    ctx4.font = '14px sans-serif';
+                    ctx4.textAlign = 'center';
+                    ctx4.fillText('상단의 [마이크 켜기] 버튼을 누르고 소리를 내보세요.', c4.width / 2, midY + 5);
+                }
+            }
+        }
+
         requestAnimationFrame(mainRender);
     }
 
@@ -919,6 +1077,7 @@
         resizeCanvasToDisplaySize(c1);
         resizeCanvasToDisplaySize(c2);
         resizeCanvasToDisplaySize(c3);
+        resizeCanvasToDisplaySize(c4);
         drawStaticWave();
         initQuiz();
         mainRender();
